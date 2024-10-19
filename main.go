@@ -20,15 +20,6 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-type FileInfo struct {
-	Name      string    `json:"name"`
-	Size      int64     `json:"size"`
-	Mode      string    `json:"mode"`
-	ModTime   time.Time `json:"modTime"`
-	IsDir     bool      `json:"isDir"`
-	Extension string    `json:"extension"`
-}
-
 func handleWebSocket(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
@@ -121,6 +112,15 @@ func listDir(path string) ([]FileInfo, error) {
 	}
 
 	return fileList, nil
+}
+
+type FileInfo struct {
+	Name      string    `json:"name"`
+	Size      int64     `json:"size"`
+	Mode      string    `json:"mode"`
+	ModTime   time.Time `json:"modTime"`
+	IsDir     bool      `json:"isDir"`
+	Extension string    `json:"extension"`
 }
 
 func runCommand(command string) ([]byte, error) {
