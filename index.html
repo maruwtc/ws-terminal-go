@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Terminal</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1e1e1e;
+            color: #dcdcdc;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            color: #27ae60;
+            margin-bottom: 40px;
+        }
+
+        #terminal {
+            background-color: #1e1e1e;
+            color: #dcdcdc;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #555;
+            font-size: 16px;
+        }
+
+        .command-line {
+            display: flex;
+            align-items: center;
+        }
+
+        .command-line span {
+            color: #27ae60;
+            margin-right: 10px;
+        }
+
+        input[type="text"] {
+            background-color: transparent;
+            border: none;
+            color: #dcdcdc;
+            outline: none;
+            flex-grow: 1;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+        }
+
+        .command-output {
+            white-space: pre-wrap;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>WebSocket Terminal</h1>
+        <div id="terminal">
+            <div class="command-output">Welcome to the terminal. Type commands below:</div>
+            <div class="command-line">
+                <span>$</span>
+                <input type="text" id="commandInput" autofocus onkeydown="handleKeyPress(event)">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = new WebSocket("wss://localhost:8443/ws");
+        const terminalDiv = document.getElementById("terminal");
+        const commandInput = document.getElementById("commandInput");
+
+        socket.onopen = function () {
+            appendOutput("Connected to server\n");
+        };
+
+        socket.onmessage = function (event) {
+            appendOutput(event.data + "\n");
+        };
+
+        socket.onclose = function (event) {
+            if (event.wasClean) {
+                appendOutput(`Connection closed cleanly, code=${event.code} reason=${event.reason}\n`);
+            } else {
+                appendOutput('Connection died\n');
+            }
+        };
+
+        socket.onerror = function (error) {
+            appendOutput(`WebSocket error: ${error.message}\n`);
+        };
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                const command = commandInput.value;
+                if (command) {
+                    appendOutput(`$ ${command}`);
+                    socket.send(command);
+                    commandInput.value = '';
+                }
+                event.preventDefault();
+            }
+        }
+
+        function appendOutput(text) {
+            const outputDiv = document.createElement('div');
+            outputDiv.classList.add('command-output');
+            outputDiv.textContent = text;
+            terminalDiv.insertBefore(outputDiv, terminalDiv.lastElementChild);
+            terminalDiv.scrollTop = terminalDiv.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
